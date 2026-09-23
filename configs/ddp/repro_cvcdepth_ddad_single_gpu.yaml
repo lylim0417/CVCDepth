@@ -13,7 +13,7 @@ model:
   pose_model: 'front'
 
 data:
-  data_path: '/data/laiyan/ssd/ddad/raw_data/ddad.json'
+  data_path: '/data/ddad/ddad.json'
   log_dir: './results/'
   dataset: 'ddad'
   rgb_path: '/data/ddad'
