@@ -127,9 +127,12 @@ class DDADdataset(torch.utils.data.Dataset):
             with open('./dataset/ddad/{}.txt'.format(mode), 'r') as f:
                 self.filenames = f.readlines()
 
-        self.rgb_path = '/data/laiyan/ssd/ddad/raw_data/'
-        self.depth_path = '/data/laiyan/ssd/ddad/depth'
-        self.match_path = '/data/laiyan/ssd/ddad/match'
+        # Remove hard-coded path
+        self.rgb_path = cfg['data']['rgb_path']
+        self.depth_path = cfg['data']['depth_path']
+        self.match_path = cfg['data'].get('match_path', '')
+        # ---
+        
         cur_path = os.path.dirname(os.path.realpath(__file__))
         self.mask_path = os.path.join(cur_path, 'ddad_mask')
         file_name = os.path.join(self.mask_path, 'mask_idx_dict.pkl')
@@ -164,8 +167,33 @@ class DDADdataset(torch.utils.data.Dataset):
 
         for index_spatial,cam in enumerate(self.cameras):
 
-            rgb_filename = os.path.join(self.rgb_path, scene_name, 'rgb',
-                                self.cameras[index_spatial], index_temporal + '.jpg')
+            # make it compatible with both .jpg & .png
+            rgb_dir = os.path.join(
+                self.rgb_path,
+                scene_name,
+                'rgb',
+                self.cameras[index_spatial]
+            )
+
+            jpg_path = os.path.join(
+                rgb_dir,
+                index_temporal + '.jpg'
+            )
+
+            png_path = os.path.join(
+                rgb_dir,
+                index_temporal + '.png'
+            )
+
+            if os.path.exists(jpg_path):
+                rgb_filename = jpg_path
+            elif os.path.exists(png_path):
+                rgb_filename = png_path
+            else:
+                raise FileNotFoundError(
+                    f"RGB image not found: {jpg_path} or {png_path}"
+                )
+            # ---
             filename = scene_name+'/'+'{}'+'/'+cam+'/'+index_temporal
             data = {
                 'idx': idx,
@@ -218,8 +246,33 @@ class DDADdataset(torch.utils.data.Dataset):
                 for iddddx, i in enumerate(contexts):
                     index_temporal_i = self.info[index_temporal]['context'][iddddx]
 
-                    rgb_context_filename = os.path.join(self.rgb_path, scene_name, 'rgb',
-                                                self.cameras[index_spatial], index_temporal_i + '.jpg')
+                    # make it compatible with both .jpg & .png
+                    rgb_context_dir = os.path.join(
+                        self.rgb_path,
+                        scene_name,
+                        'rgb',
+                        self.cameras[index_spatial]
+                    )
+
+                    jpg_context_path = os.path.join(
+                        rgb_context_dir,
+                        index_temporal_i + '.jpg'
+                    )
+
+                    png_context_path = os.path.join(
+                        rgb_context_dir,
+                        index_temporal_i + '.png'
+                    )
+
+                    if os.path.exists(jpg_context_path):
+                        rgb_context_filename = jpg_context_path
+                    elif os.path.exists(png_context_path):
+                        rgb_context_filename = png_context_path
+                    else:
+                        raise FileNotFoundError(
+                            f"Context RGB image not found: {jpg_context_path} or {png_context_path}"
+                        )
+                    # ---
                     rgb_context = pil_loader(rgb_context_filename)
                     rgb_contexts.append(rgb_context)
                 data.update({
