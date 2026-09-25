@@ -61,12 +61,24 @@ class VFDepthTrainer:
         model.set_train()
         a=time.time()
         times=[]
+
+        # Modify to add gradient accumulation
+        accum_steps = getattr(self, 'gradient_accumulation', 1)
+        model.optimizer.zero_grad(set_to_none=True)
+        # ---
+
         for batch_idx, inputs in enumerate(data_loader):
             before_op_time = time.time()
-            model.optimizer.zero_grad(set_to_none=True)
+
+            # Modify to add gradient accumulation
             outputs, losses = model.process_batch(inputs, self.rank)
-            losses['total_loss'].backward()
-            model.optimizer.step()
+            loss = losses['total_loss'] / accum_steps
+            loss.backward()
+            if (batch_idx + 1) % accum_steps == 0:
+                model.optimizer.step()
+                model.optimizer.zero_grad(set_to_none=True)
+            # ---
+
             after_op_time = time.time()
             import numpy as np
             if self.rank == 0:
