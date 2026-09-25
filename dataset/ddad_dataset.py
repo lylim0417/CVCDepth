@@ -214,18 +214,18 @@ class DDADdataset(torch.utils.data.Dataset):
                                 self.cameras[index_spatial], index_temporal + '.npz'))['arr_0'][None,:]
                     })
                 else:
-                    # Add "lidar" in path
+                    # Add "lidar" in path and change arr_0 to depth
                     data.update({
                         'depth': np.load(os.path.join(self.depth_path, scene_name, 'depth', self.cfg['data']['depth_type'],
                                                          self.cameras[index_spatial], index_temporal + '.npz'))[
-                                        'arr_0'][None, :]
+                                        'depth'][None, :]
                     })
             # if depth is returned
             if self.with_input_depth:
-                # Add "lidar" in path
+                # Add "lidar" in path and change arr_0 to depth
                 data.update({
                     'input_depth': np.load(os.path.join(self.depth_path, scene_name, 'depth', self.cfg['data']['depth_type'],
-                            self.cameras[index_spatial], index_temporal + '.npz'))['arr_0']
+                            self.cameras[index_spatial], index_temporal + '.npz'))['depth']
                 })
 
             # if pose is returned
